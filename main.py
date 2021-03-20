@@ -10,10 +10,11 @@ pygame.display.set_caption("Ship Landing")
 pygame.display.set_icon(pygame.image.load("shipIcon.png"))
 
 # Replay text code
-replayFont = pygame.font.Font("freesansbold.ttf", 64)
-replayText = replayFont.render("REPLAY?", True, (255, 255, 255))
-winText = replayFont.render("YOU WIN", True, (255, 255, 255))
-loseText = replayFont.render("YOU LOSE", True, (255, 255, 255))
+bigFont = pygame.font.Font("freesansbold.ttf", 64)
+smallFont = pygame.font.Font("freesansbold.ttf", 32)
+replayText = bigFont.render("REPLAY?", True, (255, 255, 255))
+winText = bigFont.render("YOU WIN", True, (255, 255, 255))
+loseText = bigFont.render("YOU LOSE", True, (255, 255, 255))
 
 # Button text
 yesNoFont = pygame.font.Font("freesansbold.ttf", 32)
@@ -34,6 +35,7 @@ def game():
     backY1 = -800
     backY2 = 0
     backMove = 2
+    fuelText = smallFont.render("FUEL", True, (255, 255, 255))
 
     # Variables
     gravity = 0.12
@@ -46,10 +48,16 @@ def game():
     playerX = 250 - 64
     playerY = 0
     playerYMove = 0
+    fuel = 200
+    fuelPos = 305
+    fuelWeight = 0.0002 * fuel
 
     # Game loop
     running = True
     while running:
+        # Refreshes the weight of the fuel
+        fuelWeight = 0.0005 * fuel
+
         # Show the background for the new frame
         screen.fill((0, 0, 0))
         screen.blit(backLoop1, (0, backY1))
@@ -59,7 +67,9 @@ def game():
         # Applies gravity to the players movement value if the ship isn't at max speed or if the ships isn't at the
         # bottom of the screen.
         if playerYMove != .1 or playerY < 800 - 128:
-            playerYMove += gravity
+            # Changes the player movement value based on how much fuel there is
+            # and the gravity
+            playerYMove += gravity + fuelWeight
 
         # Checks for events in the game
         for gameEvent in pygame.event.get():
@@ -71,15 +81,23 @@ def game():
                 # If the up arrow key is pressed, set thrust to "True"
                 if gameEvent.key == pygame.K_UP:
                     thrust = True
+
             # Detects key releases
             if gameEvent.type == pygame.KEYUP:
                 # If the up arrow is released, set thrust to "False"
                 if gameEvent.key == pygame.K_UP:
                     thrust = False
 
+        # Check if there is no fuel left
+        if fuel <= 0:
+            thrust = False
+
         # Player movement
         if thrust:  # Applies thrust to the player if thrust equals "True"
             playerYMove -= thrustVal
+            # Reduces the amount of fuel and repositions the rect
+            fuel -= 1
+            fuelPos += 1
         if playerY >= 800 - 128:  # Stops the player from dropping below the screen
             playerY = 800 - 128
 
@@ -118,10 +136,15 @@ def game():
             time.sleep(1)
             running = False
 
+        # Draws the fuel rectangles on the screen and the text label for it
+        pygame.draw.rect(screen, (0, 0, 0), (400, 300, 60, 210))
+        pygame.draw.rect(screen, (255, 255, 255), (405, fuelPos, 50, fuel))
+        screen.blit(fuelText, (390, 520))
+
         # Updates the screen
         pygame.display.update()
 
-
+# Calls the game method at the start of the program
 game()
 
 GUIrunning = True
